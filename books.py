@@ -7,6 +7,7 @@ from fastapi.responses import JSONResponse
 from models import Book, Author, BookCreate, AuthorCreate, AuthorModel
 import database
 from typing import Union
+from fastapi.responses import Response
 
 
 router = APIRouter()
@@ -77,7 +78,7 @@ async def edit_author(author_id: int, new_id: int, new_name: str, db: AsyncSessi
 
 
 
-@router.delete("/authors/{author_id}", response_model=List[AuthorModel])
+@router.delete("/authors/{author_id}")
 async def delete_author(author_id: int, db: AsyncSession = Depends(database.get_db)):
     try:
         async with db as session:
@@ -90,13 +91,12 @@ async def delete_author(author_id: int, db: AsyncSession = Depends(database.get_
             await session.delete(fetched_author)
             await session.commit()
 
-            updated_authors = await session.execute(select(Author))
-            return updated_authors.scalars().all()
+            return Response(status_code=204)  
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Ошибка во время удаления: {str(e)}")
 
 
-@router.patch("/{id}", response_model=Union[None, AuthorModel])
+@router.patch("/authors/{id}", response_model=Union[None, AuthorModel])
 async def update_author(id: int, item: AuthorCreate, db: AsyncSession = Depends(database.get_db)):
     try:
         async with db as session:
